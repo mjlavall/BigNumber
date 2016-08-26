@@ -28,11 +28,41 @@ namespace MikeMath
             _a = n;
         }
 
-        public BigNumber(BigInteger a, BigInteger b) : this()
+        public BigNumber(BigInteger a, BigInteger b)
         {
             var gcd = BigInteger.GreatestCommonDivisor(a, b);
-            _a = a/gcd;
-            _b = b/gcd;
+            _a = a / gcd;
+            _b = b / gcd;
+        }
+
+        public BigNumber(int n) : this()
+        {
+            _a = n;
+        }
+
+        public BigNumber(int a, int b)
+        {
+            _a = a;
+            _b = b;
+        }
+
+        public BigNumber(double d) : this()
+        {
+            var array = $"{d}".Split('.');
+            _a = BigInteger.Parse(array[0]);
+            if (array.Length != 2) return;
+            _a = BigInteger.Parse(array[0] + array[1]);
+            _b = BigInteger.Pow(10, array[1].Length);
+            var gcd = BigInteger.GreatestCommonDivisor(_a, _b);
+            _a /= gcd;
+            _b /= gcd;
+        }
+
+        public BigNumber(double a, double b)
+        {
+            var quotient = (new BigNumber(a))/(new BigNumber(b));
+            _a = quotient._a;
+            _b = quotient._b;
         }
 
         public static implicit operator BigNumber(BigInteger n)
@@ -46,12 +76,37 @@ namespace MikeMath
             var array = s.Split('/');
             if(array.Length > 2) throw new InvalidDataException("Fraction is not valid, to many '/' characters");
             if(array.Length == 0) throw new InvalidDataException("Invalid fraction");
-            BigInteger a;
-            if(!BigInteger.TryParse(array[0], out a)) throw new InvalidDataException("Numerator is not a valid integer");
-            if (array.Length == 1) return new BigNumber(a);
-            BigInteger b;
-            if(!BigInteger.TryParse(array[1], out b)) throw new InvalidDataException("Denominator is not a valid integer");
-            return new BigNumber(a, b);
+            BigNumber a;
+            if (array[0].Contains("."))
+            {
+                double d;
+                if (!double.TryParse(array[0], out d))
+                    throw new InvalidDataException("Numerator is not a valid number");
+                a = new BigNumber(d);
+            }
+            else
+            {
+                BigInteger bigInt;
+                if (!BigInteger.TryParse(array[0], out bigInt)) throw new InvalidDataException("Numerator is not a valid number");
+                a = new BigNumber(bigInt);
+            }
+            if (array.Length == 1) return a;
+            BigNumber b;
+            if (array[1].Contains("."))
+            {
+                double d;
+                if (!double.TryParse(array[1], out d))
+                    throw new InvalidDataException("Numerator is not a valid number");
+                b = new BigNumber(d);
+            }
+            else
+            {
+                BigInteger bigInt;
+                if (!BigInteger.TryParse(array[1], out bigInt)) throw new InvalidDataException("Numerator is not a valid number");
+                b = new BigNumber(bigInt);
+            }
+            
+            return a/b;
         }
 
         public static bool TryParse(string s, out BigNumber b)
